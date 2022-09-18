@@ -357,9 +357,23 @@
       6. stack frame에 foo라는 메서드가 쌓이게 되고 메서드 명령어 수행
       7. return. (PC register가 코드 영역의 `a.foo()`호출했던 명령어의 다음명령어를 가르킨다.)
 
-### dynamic dispatcher vs static dispatcher (값타입이 참조타입보다 빠른 이유)
+### dynamic(table) dispatch vs static(direct) dispatch (값타입이 참조타입보다 빠른 이유)
 
-[참고](https://sihyungyou.github.io/iOS-method-dispatch/)
+[참고 1](https://sihyungyou.github.io/iOS-method-dispatch/), [참고 2](https://jcsoohwancho.github.io/2019-11-01-Swift%EC%9D%98-Dispatch-%EA%B7%9C%EC%B9%99/)
+
+
+
+### protocol과 class 의 메모리 변화
+
+* protocol을 채택한 class의 instance의 메모리 구조를 살펴보면
+* heap영역에 class의 프로퍼티 영역, 메서드(virtual table)영역, extension 영역, 프로토콜 영역이 존재한다.
+* 여기서 메서드 영역은 virtual table로 구성이 되어 있고, dynamic dispatcher형태이다.
+  * virtual table에는 class가 갖고 있는 메서드, protocol를 채택해 구현한 메서드, protocol을 채택해 딸려오는 default 메서드의 코드영역 주소를 갖고 있다.
+* 프로토콜 영역은 witness table로 구성이 되어 있고, 마찬가지로 dynamic dispatcher이다.
+  * witness table에는 class가 protocol을 채택해 구현 메서드의 코드영역 주소를 갖고 있다.
+* 한가지 특이한 점은 witness table이 가르키고 있는 메서드 코드 영역 주소는 virtual table에 있는 같은 메서드에 대해서 동일하다.
+
+### 상속과 class 메모리
 
 
 
@@ -384,26 +398,18 @@
 
 [참고1](https://fomaios.tistory.com/entry/iOS-%EB%A9%B4%EC%A0%91%EC%A7%88%EB%AC%B8-Delegate%EB%8A%94-retain%EC%9D%B4-%EB%90%A0%EA%B9%8C), [참고 2](https://velog.io/@aurora_97/TIL-Delegate%EC%99%80-Weak)
 
-* 
+### Optional closure에 @escaping을 안붙히는 이유
+
+[참고](https://stackoverflow.com/questions/39618803/swift-optional-escaping-closure-parameter)
+
+* `(() -> Void)?`타입은 이렇게 표현이 가능하다. `Optional<()->Void>` 즉, closure가 아니다.
+* `@escaping` 키워드는 closure앞에만 붙을 수 있다.
 
 ### method swizzling이란
 
 * https://zeddios.tistory.com/554
 * 런타임에 어떤 메서드를 내가 원하는 메서드로 바꾸는 것
 * 다이나믹 디스패처를 지원하는 언어에서 사용되는 기법
-
-### protocol과 class 의 메모리 변화
-
-* 프로토콜 내부에는 프로퍼티, 메서드 이름과 형태만을 선언한다. (extenstion 제외)
-* 프로토콜을 채택받은 타입은 프로토콜에 선언한 프로퍼티, 메서드를 모두 구현해야한다. (extension 제외)
-* 예외적으로 확장을 하게되면 프로토콜에 디폴트 메서드를 정의할 수 있다. 이 경우 채택받은 타입은 디폴트 메서드를 구현하지 않아도 된다.
-* 프로토콜을 채택받은 classs객체의 메모리 구조를 살펴보면
-* heap영역에 class의 프로퍼티 영역, 메서드(virtual table)영역, extension 영역, 프로토콜 영역이 존재한다.
-* 여기서 메서드 영역은 virtual table로 구성이 되어 있고, dynamic dispatcher형태이다.
-  * virtual table에는 class가 갖고 있는 메서드, protocol를 채택해 구현한 메서드, protocol을 채택해 딸려오는 default 메서드의 코드영역 주소를 갖고 있다.
-* 프로토콜 영역은 witness table로 구성이 되어 있고, 마찬가지로 dynamic dispatcher이다.
-  * witness table에는 class가 protocol을 채택해 구현 메서드의 코드영역 주소를 갖고 있다.
-* 한가지 특이한 점은 witness table이 가르키고 있는 메서드 코드 영역 주소는 virtual table에 있는 같은 메서드에 대해서 동일하다.
 
 ### 탈출클로저란
 
@@ -522,3 +528,7 @@
 ## Combine
 
 ## 알고리즘(라이브 코딩테스트 대비)
+
+### 탐색
+
+### 정렬

@@ -108,21 +108,6 @@
     * Serial Queue에 작업을 보내도 문제가 생기지 않는다.
     * 보통 백그라운드에서 처리해야 할 때 적합하다.
 
-    
-
-
-
-## RIBs/모듈화
-
-### 왜 약한 의존성을 유지해야하는가
-
-### RIBs의 장점과 사용이유
-
-### RIBs의 단점과 주의 사항
-
-
-
-## TCA
 
 
 
@@ -312,28 +297,6 @@
 ### UITextView의 구성요소
 
 ### TextKit2
-
-### iOS LifeCycle
-
-### iOS View LifeCycle
-
-
-
-## Modern Concurrency (async/await)
-
-
-
-## Combine
-
-
-
-## 공통주제
-
-### MVVM
-
-### Clean Architecture
-
-### OOP
 
 
 
@@ -529,3 +492,33 @@
   * 값타입의 경우 현재 value의 상태를 "캡처"(복사)해서 가져온다. 따라서 원본 value의 값에 영향이 없음.
   * 참조타입의 경우에는 캡처리스트를 이용해 캡처한다고 해도 항상 주소값을 가져온다. 그렇다면 참조타입일 경우에는 언제 쓰이는가?
     * [weak self]를 이용해 현재 객체의 RC를 증가시키지 않게해서 강한 순환참조를 예방할 때 쓰인다.
+
+
+
+## 공통주제
+
+### MVVM
+
+### Clean Architecture
+
+### OOP
+
+
+
+## RIBs/모듈화
+
+### 왜 약한 의존성을 유지해야하는가
+
+### RIBs의 장점과 사용이유
+
+### RIBs의 단점과 주의 사항
+
+
+
+## TCA
+
+## Modern Concurrency (async/await)
+
+## Combine
+
+## 알고리즘(라이브 코딩테스트 대비)

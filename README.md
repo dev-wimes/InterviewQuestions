@@ -4,15 +4,111 @@
 >
 > 나만의 해석으로 적은 내용들도 있으니 틀릴 수도 있다. 
 
-
-
 ## RxSwift
 
-### Cold/Hot
+### Hot/Cold Observable
 
-### Subject/Relay/Drive
+[참고 1](https://jcsoohwancho.github.io/2019-10-20-RxSwift%EA%B8%B0%EC%B4%88-Hot-vs-Cold-Observable/), [참고 2](https://reactivex.io/documentation/observable.html), [참고 3](https://nacho.tistory.com/21), [참고 4](https://dongminyoon.tistory.com/58)
 
-### MainScheduler
+공식 Doc 에서의 정의
+
+> When does an Observable begin emitting its sequence of items? It depends on the Observable. A “hot” Observable may begin emitting items as soon as it is created, and so any observer who later subscribes to that Observable may start observing the sequence somewhere in the middle. A “cold” Observable, on the other hand, waits until an observer subscribes to it before it begins to emit items, and so such an observer is guaranteed to see the whole sequence from the beginning.
+>
+> 해석 : 언제 Observable은 이벤트 발생을 시작하는가? 이는 Observable에 따라 다르다. 
+> ‘hot’ Observable은 만들어진 즉시 이벤트를 발생시킬 수 있고, 나중에 오는 구독자는 시퀀스의 중간부터 이벤트를 관찰하게 된다.
+> ‘cold’ Observable은 반대로 어떤 Observer에 의해 구독될 때 까지 아이템을 방출하지 않고 기다린다. 그리고 시퀀스 전체를 Observer가 받아볼 수 있음이 보장된다.
+
+* Hot Observable
+  * 구독여부에 상관없이 이벤트를 발생 시킴
+  * 일단 동작이 시작되면 리소스를 사용하게 된다.
+  * 이 동작을 시작하는 시점을 조절할 수 있는 메서드가 제공됨 (`connect()`)
+  * 여러 Observer(구독자)가 하나의 Observable을 공유할 수 있다.
+  * ConnectableObservable이라고도 부른다.
+  * Hot Observable을 Cold Observable과 유사하게 취급할 수 있도록 ReplaySubject 같은 것도 제공
+  * Subject, UIEvent, 타이머 등
+* Cold Observable
+  * 구독과 동시에 무조건 동작한다.
+  * 구독 전에는 연산에 필요한 자원을 소모하지 않는다.
+  * Observer(구독자)마다 별도의 Observable 인스턴스를 갖게된다.
+    * 만약 시퀀스를 만들어 내는 과정이 오래 걸리는 경우 구독이 일어날 때 마다 그 과정을 거쳐야하는 비효율이 야기
+    * 이걸 Hot처럼 하나의 Observable을 공유하도록 하려면 `share()`를 사용
+  * Http 요청, Single, just, of 등등
+
+### Subject & Relay
+
+[참고 1](https://jinshine.github.io/2019/01/05/RxSwift/3.Subject%EB%9E%80/)
+
+* PublishSubject
+
+  * `.completed`, `.error`이벤트가 발생할 때까지, 즉 종료될 때까지 구독한 이후부터 이벤트를 방출한다.
+
+  <img src="README.assets/image-20220918181718981.png" alt="image-20220918181718981" style="zoom: 33%;" />
+
+* BehaviorSubject
+
+  * PublishSubject와 유사하지만 초기값을 갖는다.
+  * 항상 **직전**의 값부터 구독한다.
+  
+  <img src="README.assets/image-20220918181754947.png" alt="image-20220918181754947" style="zoom: 33%;" />
+  
+* ReplaySubject
+
+  * 생성시 선택한 특정 크기만큼 일시적으로 캐싱하거나 버퍼를 저장해서 최신 요소를 모두 방출한다.
+  * 최근 검색어 같은 곳에 사용하면 좋을듯
+
+  <img src="README.assets/image-20220918181906535.png" alt="image-20220918181906535" style="zoom:33%;" />
+
+* Subject vs Relay
+
+  * Subject는 RxSwift에 속하고, Relay는 RxCocoa에 속해있다.
+  * Relay에는 ReplayRelay가 없다.
+  * Subject는 `.completed`, `.error`의 이벤트가 발생하면 subscribe가 종료된다.
+  * Relay는 `.completed`, `.error`를 발생하지 않고 Dispose되기 전까지 계속 작동하기 때문에 UIEvent에서 사용하기 적절하다.
+
+
+### Scheduler
+
+[참고 1](https://velog.io/@hansangjin96/RxSwift-Scheduler-%EC%9E%91%EC%84%B1%EC%A4%91), [참고 2](https://inuplace.tistory.com/1100)
+
+* Cocoa와 RxSwift 비교
+
+  <img src="README.assets/image-20220918183813064.png" alt="image-20220918183813064" style="zoom:33%;" />
+
+* observe(on:), subscribe(on:)
+
+  * `observe(on:)`은 시퀀스를 **어느 스케줄러에서 observe할 것인지**를 결정한다. 각각의 Operator(map, filter 등등)를 다른 스케줄러에서 지정하고 싶을 때 사용할 수 있다.
+  * `subscribe(on:)`은 시퀀스가**시작할 스케줄러**를 결정한다. 즉 특정 스케줄러에서 동작의 수행을 보장할 때 한번만 실행하는 것을 권장한다.
+
+* Scheduler의 종류와 자주쓰이는 Scheduler
+
+  <img src="README.assets/image-20220918184110725.png" alt="image-20220918184110725" style="zoom: 50%;" />
+
+  * MainScheduler
+
+    * MainThread에서 실행되어야 할 작업에서 사용(주로 UI)
+    * `instance` vs `aysncInstance` ([참고](https://stackoverflow.com/questions/58332584/rxswift-mainscheduler-instance-vs-mainscheduler-asyncinstance))
+      * `instance`
+        * main thread에 동기적으로 이벤트를 전달한다.
+      * `asyncInstacne`는 이름 그대로 main thread에 비동기적으로 이벤트를 전달한다.
+        * 이미 main thread에서 실행되고 있을 때 강제로 비동기 전달을 해야하는 경우가 잘 없다.
+        * 종종 같은 파이프라인에서 1번 event가 2번 event를 트리거하는 상황에서 두 event가 동시에 발생하면 경고가 발생한다. 이런 경우 `asyncInstacne`를 사용한다.
+
+  * CurrentThreadScheduler
+
+    * 현재 있는 쓰레드에서 작업이 실행된다.
+
+  * SerialDispatchQueueScheduler
+
+    * 특정한 `dispatch_queue_t`에서 실행되어야 할 작업을 처리한다.
+    * 메인 스케줄러는 `SerialDispatchQueueScheduler`의 인스턴스 중 하나 ([RxSwift 코드를 보면 MainScheduler가 이를 상속받고 있다.](https://github.com/ReactiveX/RxSwift/blob/main/RxSwift/Schedulers/MainScheduler.swift))
+
+  * ConcurrentDispatchQueueScheduler
+
+    * 특정한 `dispatch_queue_t`에서 실행되어야 할 작업을 처리한다.
+    * Serial Queue에 작업을 보내도 문제가 생기지 않는다.
+    * 보통 백그라운드에서 처리해야 할 때 적합하다.
+
+    
 
 
 

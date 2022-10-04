@@ -77,7 +77,7 @@
 * observe(on:), subscribe(on:)
 
   * `observe(on:)`은 시퀀스를 **어느 스케줄러에서 observe할 것인지**를 결정한다. 각각의 Operator(map, filter 등등)를 다른 스케줄러에서 지정하고 싶을 때 사용할 수 있다.
-  * `subscribe(on:)`은 시퀀스가**시작할 스케줄러**를 결정한다. 즉 특정 스케줄러에서 동작의 수행을 보장할 때 한번만 실행하는 것을 권장한다.
+  * `subscribe(on:)`은 시퀀스가 **시작할 스케줄러**를 결정한다. 즉 특정 스케줄러에서 동작의 수행을 보장할 때 한번만 실행하는 것을 권장한다.
 
 * Scheduler의 종류와 자주쓰이는 Scheduler
 
@@ -252,7 +252,7 @@
   * Responder chain을 관리하는 메서드들이 존재
   * 화면 진입 시 UITextField를 becomFirstResponder()로 설정하게 되면 키패드가 올라온다.
   * responder chain의 순서는 bottom up 방식
-    * 초기 view(이벤트를 최초로 받은 view)먼저 인벤트를 처리하려고 시도 
+    * 초기 view(이벤트를 최초로 받은 view)먼저 이벤트를 처리하려고 시도 
     * 이벤트를 처리할 수 없는 경우 초기view의 super view 에 이벤트를 전달
     * 다시 이벤트 처리할 수 없으면 super view... 이런식으로 쭉 올라가서
     * view controller -> window -> application객체에서 처리 불가할 경우 인벤트 삭제

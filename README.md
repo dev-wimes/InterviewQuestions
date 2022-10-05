@@ -255,7 +255,7 @@
     * 초기 view(이벤트를 최초로 받은 view)먼저 이벤트를 처리하려고 시도 
     * 이벤트를 처리할 수 없는 경우 초기view의 super view 에 이벤트를 전달
     * 다시 이벤트 처리할 수 없으면 super view... 이런식으로 쭉 올라가서
-    * view controller -> window -> application객체에서 처리 불가할 경우 인벤트 삭제
+    * view controller -> window -> application객체에서 처리 불가할 경우 이벤트 삭제
 
 ### NotificationCenter동작방식과 활용 방안
 

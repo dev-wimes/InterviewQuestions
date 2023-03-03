@@ -206,7 +206,9 @@
 * https://getbingsoo.tistory.com/m/21
 * https://tono18.tistory.com/11
 * ViewConrollerLifecyle
+  
   <img src="README.assets/image-20210928183459562.png" alt="image-20210928183459562" style="zoom:75%;" />
+  
   * loadView
     * 화면에 띄어줄 view를 만드는 메서드로 view를 만들고 메모리에 올림
     * 직접 호출 금지
@@ -359,6 +361,124 @@
       6. stack frame에 foo라는 메서드가 쌓이게 되고 메서드 명령어 수행
       7. return. (PC register가 코드 영역의 `a.foo()`호출했던 명령어의 다음명령어를 가르킨다.)
 
+### 아래 코드의 결과가 왜 다를까? (메모리 입장에서 본 Closure와 캡처리스트)
+
+```swift
+class CalculatorClass {
+  var a: Int
+  var b: Int
+
+  var sum: Int {
+    return a + b
+  }
+
+  init(a: Int, b: Int) {
+    self.a = a
+    self.b = b
+  }
+}
+
+struct CalculatorStruct {
+  var a: Int
+  var b: Int
+
+  var sum: Int {
+    return a + b
+  }
+
+  init(a: Int, b: Int) {
+    self.a = a
+    self.b = b
+  }
+}
+
+var calculatorClass = CalculatorClass(a: 3, b: 5)
+
+let closure1 = { [calculatorClass] in
+  print("The result is \(calculatorClass.sum)")
+}
+
+calculatorClass.b = 20
+
+closure1() // The result is 23
+
+var calculatorStruct = CalculatorStruct(a: 3, b: 5)
+
+let closure2 = { [calculatorStruct] in
+  print("The result is \(calculatorStruct.sum)")
+}
+
+calculatorStruct.b = 20
+
+closure2() // The result is 8
+```
+
+* 우선 closure가 메모리에 어떻게 적재되는지 설명한다.
+
+  * closure는 1급 객체 이다. "객체" 라는 이름이 붙은 것 처럼 heap에 저장되는 reference 타입이다.
+
+  * clsoure를 "생성"할 경우 heap 영역에 저장된다.
+
+  * closure를 "실행"할 경우 code영역의 명령어가 stack 영역에 콜 스택이 쌓이면서 실행된다.
+
+  * 그림으로 보면 아래와 같음
+
+    ![image-20230304013659159](README.assets/image-20230304013659159.png)
+
+    1. closure를 선언하는 명령어를 수행한다.
+    2. 콜스택이 쌓인다.
+    3. 해당 콜스택의 closure라는 변수 내부에는 closure instance주소를 가르킨다.(저장한다.)
+    4. heap에 있는 0x1111번지는 코드영역의 0x2222번지를 가르킨다. 0x2222에는 closure 내부에 있는 명령어 집합들의 시작점이다. (closure 선언 완료)
+    5. closure를 실행한다.
+    6. closure는 0x1111라는 값을 저장하고 있다. 0x1111번지로 간다.
+    7. 0x1111번지는 코드영역 0x2222번지를 수행한다. (closure 실행)
+    8. 0x2222번지에 필요한 변수들을 위해 콜스택이 쌓인다.
+    9. 끝나면 return하고 분기한다.
+
+    한가지 빼먹은게 있는데 캡처리스트는 값에 의한 복사가 일어난다.
+
+    ```swift
+    let a = 0
+    
+    let closure = { [a] in
+      print(a)
+    }
+    a = 10
+    closure() // 0
+    ```
+
+    위 코드 처럼 a는 주소값이 아닌 0이라는 값을 복사한 거다.
+
+* ClosureClass, closure1의 경우
+
+  * 그림으로 설명한다.
+
+    ![image-20230304020120500](README.assets/image-20230304020120500.png)
+
+    1. 명령어 실행 콜스택 생성
+    2. calculatorClass instance생성 (0x3333번지)
+    3. closure 생성(0x1111번지)
+    4. 해당 클로저 내부의 calculatorClass를 값에 의한 복사. 0x3333이라는 값을 복사해서 저장 즉, closure내부의 calculatorClass는 0x3333을 가리키고 있다.
+    5. calculatorClass.b = 20 명령어 실행 (편의상 콜스택 생략) b가 20으로 변경
+
+    이제 closure1을 실행하면 closure1내부의 calculatorClass는 b가 20인 상태인 instance(0x3333)를 가리키고 있으므로 23이 출력된다.
+
+* ClosureStruct, closure2의 경우
+
+  * 그림으로 설명한다.
+
+    ![image-20230304021528566](README.assets/image-20230304021528566.png)
+
+    1. 명령어 실행 콜스택 생성
+    2. calculatorStruct는 값 타입이다. 해당 instance는 스택 내부에 생성된다.
+    3. closure 생성(0x1111번지)
+    4. closure내부에서 calculatorStruct를 값에 의한 복사. a = 3, b= 5, sum 메서드의 코드 위치 등 이 해당 closure에 저장된다.
+    5. calcuatorStruct.b = 20 명령어 수행. stack내부에 있는 calculatorStruct의 b가 20으로 변경된다.
+
+    이제 closure2을 실행하면 closure2내부의 calculatorStruct는 a = 3, b = 5 인 instance이므로 8이 출력된다.
+
+
+
 ### dynamic(table) dispatch vs static(direct) dispatch (값타입이 참조타입보다 빠른 이유)
 
 [참고 1](https://sihyungyou.github.io/iOS-method-dispatch/), [참고 2](https://jcsoohwancho.github.io/2019-11-01-Swift%EC%9D%98-Dispatch-%EA%B7%9C%EC%B9%99/)
@@ -505,11 +625,96 @@
 
 ## 공통주제
 
+### SOLID
+
+* [참고](https://github.com/i-colours-u/Design-Pattern-In-Swift/blob/main/contents/1-SOLID.md)
+
 ### MVVM
 
 ### Clean Architecture
 
 ### OOP
+
+* 사실 모두가 알고 있을 것이고, 다른 사람들이 정리해놓은 내용들이 많기도 하고, 경력직 면접질문에서는 잘 나오지 않는 것 같다.
+  가끔 OOP와 POP의 차이를 물어보는 경우가 있어서 [링크](https://backendcode.tistory.com/160)를 달아둔다.
+
+### POP
+
+[참고](https://blog.yagom.net/531/)
+
+* 프로토콜은 특정 역항르 수행하기 위한 메서드, 프로퍼티, 기타 요구사항 등의 청사진이다.
+
+* 프로토콜을 채택한 타입은 프로토콜이 요구하는 기능을 구현하여 프로토콜을 준수해야 한다.
+
+* 앞서말한 내용들은 이름만 프로토콜이지 기존 OOP의 대가라고 할 수 있는 java 언어의 interface와 다를 바가 없다.(그렇다고 interface를 이용한게 OOP는 아니다. OOP는 class의 상속을 기반하고 있다.)
+
+  * 핵심은 앞서 말한 내용들은 기존의 다른 언어들에게 있는 interface와 다를게 없다는 것이다.
+  * 그렇다면 프로토콜 지향 프로그래밍은 뭐가 특별한 걸까?
+
+* 위 내용만으로 protocol을 활용했을 때 생각해보자
+
+  * 특정 프로토콜을 정의하고 여러 타입에서 이 프로토콜을 준수하게 만들어 타입마다 똑같은 메서드, 똑같은 프로퍼티, 똑같은 서브스크립트를 구현해야 한다.
+  * 그래 폴리모피즘 하려고 청사진 만들어서 프로토콜 쓰는 건 알겠는데 같은 메서드, 프로퍼티 등 중복코드를 굳이 왜 써야 하는거지?
+  * 이때 필요한게 protocol의 extension이다. 이를 프로토콜 초기구현이라고 한다.
+
+* 코드를 보자
+
+  ```swift
+  protocol Talkable {
+      var topic: String { get set }
+      func talk(to: Self)
+  }
+  
+  // 익스텐션을 사용한 프로토콜 초기 구현
+  extension Talkable {
+      func talk(to: Self) {
+          print("\(to)! \(topic)")
+      }
+  }
+  
+  struct Person: Talkable {
+      var topic: String
+      var name: String
+  }
+  
+  struct Monkey: Talkable {
+      var topic: String
+  }
+  
+  let yagom = Person(topic: "Swift", name: "yagom")
+  let hana = Person(topic: "Internet", name: "hana")
+  
+  yagom.talk(to: hana)
+  hana.talk(to: yagom) 
+  ```
+
+  `Person`과 `Monkey`에 `Talkable`의 요구사항인 `talk(to:)` 메서드를 구현하지 않았음에도 전혀 오류가 발생하지 않는다.
+
+  이렇게 프로토콜에 초기 구현을 해둔다면 여러 타입에서 해당 기능을 사용하고 싶을 때 프로토콜을 채택하기만 하면 된다.
+
+### GC(Garbage Collection) vs ARC(Automatic Reference Counting)
+
+[참고](https://sihyungyou.github.io/iOS-GC-vs-ARC/)
+
+둘은 메모리를 관리 방법에 대한 모델 개념이다. 각각의 차이는 다음과 같다.
+
+* GC
+  * 프로그램 실행중에 동적으로 메모리를 감시하고 있다가 더 이상 사용할 필요가 없다고 여겨지는 것을 메모리에서 삭제한다.
+  * run time에서 메모리를 관리한다.
+  * 장점
+    * 인스턴스가 해제될 확률이 RC에 비해 높다
+  * 단점
+    * 개발자가 참조 해제 시점을 파악할 수 없다. 왜냐? 런타임에서 system이 알아서 없애주고 있기 때문.
+    * 또한 런타임 시점에 계속 추적하는 오버헤드로 성능 저하가 있을 수 있다.
+* ARC
+  * 코드를 컴파일할 때 컴파일러가 프로그래머 대신에 release 코드를 적절한 위치에 넣어주는 개념. 
+  * 프로그램이 실행되고 있는 상태(run time)에서 메모리를 감시하는 것이 아니다.
+  * 바이너리 코드에 메모리 해제 코드가 들어가도록 한다는 것임
+  * 장점
+    * 개발자가 참조 해제 시점을 파악할 수 있다.
+    * 런타임 시점에 추가적인 오버헤드가 발생하지 않는다.
+  * 단점
+    * 순환참조 발생 시 영구적으로 메모리가 해제되지 않아 메모리 누수의 위험이 있다.
 
 
 

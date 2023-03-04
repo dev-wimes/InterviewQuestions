@@ -67,6 +67,18 @@
   * Subject는 `.completed`, `.error`의 이벤트가 발생하면 subscribe가 종료된다.
   * Relay는 `.completed`, `.error`를 발생하지 않고 Dispose되기 전까지 계속 작동하기 때문에 UIEvent에서 사용하기 적절하다.
 
+### Signal과 Driver
+
+[참고1](https://eunjin3786.tistory.com/75), [참고2](https://inuplace.tistory.com/1102)
+
+* UI계의 PublishSubject/BehaviorSubject 와 같다.
+* 간단히 말하면 Signal은 PublishSubject와 유사하고, Driver는 BehaviorSubject와 유사하다.
+* 둘은 공통점은 error 를 방출하지 않는다. 메인 쓰레드에서의 작동을 보장한다.
+
+![image-20230304115523303](README.assets/image-20230304115523303.png)
+
+
+
 
 ### Scheduler
 

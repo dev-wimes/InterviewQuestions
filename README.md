@@ -635,6 +635,14 @@ closure2() // The result is 8
 
 
 
+## Xcode
+
+### XcodeConcepts
+
+[참고](https://medium.com/hoontopia/xcode-concepts-1-b5396e360bf4)
+
+
+
 ## 공통주제
 
 ### SOLID
